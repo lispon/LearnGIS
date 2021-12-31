@@ -5,11 +5,11 @@
 #include <qgsvectorlayer.h>
 
 class VectorMapLayer : public QgsVectorLayer {
-    Q_OBJECT
+  Q_OBJECT
 
-  public:
-    explicit VectorMapLayer(char demo_index);
-    ~VectorMapLayer() override;
+ public:
+  explicit VectorMapLayer(char demo_index);
+  ~VectorMapLayer() override;
 };
 
-#endif // VECTORMAPLAYER_H
+#endif  // VECTORMAPLAYER_H

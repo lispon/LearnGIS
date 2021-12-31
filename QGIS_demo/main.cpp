@@ -1,15 +1,15 @@
-﻿#include "mainwindow.h"
+﻿#include <qgsapplication.h>
 
-#include <qgsapplication.h>
+#include "mainwindow.h"
 
 int main(int argc, char* argv[]) {
-    QgsApplication a(argc, argv, true);
+  QgsApplication a(argc, argv, true);
 
-    a.init(QString());
-    a.initQgis();
+  a.init(QString());
+  a.initQgis();
 
-    MainWindow w;
-    w.show();
+  MainWindow w;
+  w.show();
 
-    return a.exec();
+  return a.exec();
 }
