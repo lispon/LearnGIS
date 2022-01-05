@@ -7,13 +7,13 @@
 #include <qgslayertreeview.h>
 #include <qgsmapcanvas.h>
 #include <qgsproject.h>
+#include <qgsproviderregistry.h>
+#include <qgsrasterlayer.h>
 
 #include <QDockWidget>
 #include <QGridLayout>
 #include <QMainWindow>
 #include <QToolBar>
-
-#include "vectormaplayer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -30,8 +30,8 @@ class MainWindow : public QMainWindow {
 
   void addShpfile();
   void addS57();
-  void addLocalTMS();
-  void addWMS();
+  void addOnlineWMS();
+  void addOfflineWMS();
 
  private:
   Ui::MainWindow* ui;
@@ -39,7 +39,10 @@ class MainWindow : public QMainWindow {
   void initCanvas(QgsMapCanvas& canvas);
   void initLayerTree();
 
+  void addWMS(const QString& uri, const QString& name);
+
  private:
   void transform_demo();
+  void logAllProviderName();
 };
 #endif  // MAINWINDOW_H

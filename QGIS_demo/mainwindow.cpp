@@ -6,6 +6,8 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
 
+  logAllProviderName();
+
   QGridLayout* layout = new QGridLayout(ui->centralwidget);
   ui->centralwidget->setLayout(layout);
   layout->setContentsMargins(0, 0, 0, 0);
@@ -20,9 +22,9 @@ MainWindow::MainWindow(QWidget* parent)
 
   addS57();
 
-  addLocalTMS();
+  addOnlineWMS();
 
-  addWMS();
+  addOfflineWMS();
 
   _map_canvas->zoomToFullExtent();
   _map_canvas->refresh();
@@ -103,14 +105,46 @@ void MainWindow::addS57() {
   //
 }
 
-void MainWindow::addLocalTMS() {
-  //
+void MainWindow::addOnlineWMS() {
+  // type=xyz&zmin=1&zmax=18&url=http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g%3D0%26dir%3Ddir_n'
+  const QString uri = QStringLiteral(
+      "type=xyz&zmin=1&zmax=18&url=http://ecn.t3.tiles.virtualearth.net/tiles/"
+      "a{q}.jpeg?g%3D0%26dir%3Ddir_n'");
+  const QString name = QStringLiteral("bing_satellite_online");
+
+  addWMS(uri, name);
 }
 
-void MainWindow::addWMS() {
-  //
+void MainWindow::addOfflineWMS() {
+  const QString uri = QStringLiteral(
+      "type=xyz&zmin=1&zmax=18&url=file:///home/dspon/lisibh/resources/"
+      "maptiles/"
+      "maptiles/bing_sattelite/{z}/{x}/{y}.jpg");
+  const QString name = QStringLiteral("bing_satellite_offline");
+
+  addWMS(uri, name);
+}
+
+void MainWindow::addWMS(const QString& uri, const QString& name) {
+  QgsRasterLayer* layer = new QgsRasterLayer(uri, name, "wms");
+  layer->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(3857));
+  if (!layer->isValid()) {
+    qDebug() << "raster lyer not valid," << name << ","
+             << layer->error().message();
+    for (const auto& one : layer->error().messageList()) {
+      qDebug() << "error:" << one.message();
+    }
+  }
+
+  QgsProject::instance()->addMapLayer(layer);
 }
 
 void MainWindow::transform_demo() {
   //
+}
+
+void MainWindow::logAllProviderName() {
+  auto pr = QgsProviderRegistry::instance();
+  qDebug() << "allProviderName:" << pr->providerList() << pr->pluginList()
+           << pr->libraryDirectory();
 }
