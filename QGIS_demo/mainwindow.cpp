@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget* parent)
 
   initLayerTree();
 
+  addMemoryLayer();
+
   addShpfile();
 
   addS57();
@@ -91,10 +93,76 @@ void MainWindow::initLayerTree() {
       });
 }
 
+void MainWindow::addMemoryLayer() {
+  // geometry type: point, include Z dimension, include M values.
+  // EPSG: 4326.
+  // field lists:
+  // field_text_len10: field type=text, length=10.
+  // field_whole-number_len10: field type=whole number, length=10.
+  // field_decimal-number_len10_precision6: field type=decimal number,
+  //                                        length=10, precision=6.
+  // ...
+  const QString uri = QStringLiteral(
+      "PointZM?crs=EPSG:4326&field=field_text_len10:string(10,0)&field=field_"
+      "whole-number_len10:integer(10,0)&field=field_decimal-number_len10_"
+      "precision6:double(10,6)&field=field_boolean:boolean(0,0)&field=field_"
+      "date:date(0,0)&field=field_time:time(0,0)&field=field_date-and-time:"
+      "datetime(0,0)&field=field_binary-BLOB:string(0,0)");
+
+  const QString name = QStringLiteral("vector_memory");
+  const QString provider = QStringLiteral("memory");
+  QgsVectorLayer* layer = new QgsVectorLayer(uri, name, provider);
+  layer->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326));
+
+  layer->startEditing();
+
+  {
+    QgsField field;
+    field.setName("add_unlimited-length-text");
+    field.setType(QVariant::String);
+    const bool ok = layer->addAttribute(field);
+    if (!ok) {
+      qDebug() << "add_field_to_memory_layer:" << ok;
+    }
+
+    QgsFields fields = layer->fields();
+    qDebug() << "memory_layer_fields:" << fields.names();
+  }
+
+  {
+    QgsFeature feature;
+    feature.initAttributes(layer->fields().count());
+
+    // attr0, field_text_len10, length=10, but attribute.length=11.
+    feature.setAttribute(0, QByteArray("01234567890"));
+
+    const bool ok = layer->addFeature(feature);
+    if (!ok) {
+      qDebug() << "add_feature_to_memory_layer:" << ok;
+    }
+
+    qDebug() << "attr-field_text_len10:"
+             << feature.attribute(0);  // 0123456789, length=11.
+
+    QgsFeatureIds ids = layer->allFeatureIds();
+    Q_ASSERT(1 == ids.count());
+    if (1 == ids.count()) {
+      QgsFeature ftr = layer->getFeature(*ids.begin());
+      QVariant attr = ftr.attribute(0);
+      qDebug() << "out_range_field_length:" << attr;  // 01234567890
+    }
+
+    qDebug() << "memory_add_feature:" << layer->featureCount();
+  }
+
+  QgsProject::instance()->addMapLayer(layer);
+}
+
 void MainWindow::addShpfile() {
   const QString uri = QStringLiteral("./mapdata/shp/gadm36_CHN_3.shp");
   const QString name = QStringLiteral("gadm36_CHN_3");
-  QgsVectorLayer* layer = new QgsVectorLayer(uri, name, "ogr");
+  const QString provider = QStringLiteral("ogr");
+  QgsVectorLayer* layer = new QgsVectorLayer(uri, name, provider);
 
   { layer->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(4326)); }
 
@@ -126,7 +194,8 @@ void MainWindow::addOfflineWMS() {
 }
 
 void MainWindow::addWMS(const QString& uri, const QString& name) {
-  QgsRasterLayer* layer = new QgsRasterLayer(uri, name, "wms");
+  const QString provider = QStringLiteral("wms");
+  QgsRasterLayer* layer = new QgsRasterLayer(uri, name, provider);
   layer->setCrs(QgsCoordinateReferenceSystem::fromEpsgId(3857));
   if (!layer->isValid()) {
     qDebug() << "raster lyer not valid," << name << ","

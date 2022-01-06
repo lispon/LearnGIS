@@ -28,6 +28,7 @@ class MainWindow : public QMainWindow {
   MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
 
+  void addMemoryLayer();
   void addShpfile();
   void addS57();
   void addOnlineWMS();
